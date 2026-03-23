@@ -1,28 +1,35 @@
 import { useState, useCallback } from 'react';
-import TopBar from './components/TopBar';
 import WelcomeScreen from './components/WelcomeScreen';
+import ContextChatScreen from './components/ContextChatScreen';
 import SplitScreen from './components/SplitScreen';
 import DashboardScreen from './components/DashboardScreen';
 import { SCENARIOS } from './data/scenarios';
 
 export default function App() {
-    const [screen, setScreen] = useState('welcome'); // welcome | split | dashboard
+    const [screen, setScreen] = useState('welcome'); // welcome | context | split | dashboard
     const [scenario, setScenario] = useState(null);
+    const [chatHistory, setChatHistory] = useState([]);
 
     const handleFillExample = useCallback((type) => {
         setScenario(SCENARIOS[type]);
     }, []);
 
-    const handleStart = useCallback(() => {
-        if (!scenario) {
-            setScenario(SCENARIOS.restaurant);
+    const handleStart = useCallback((customInput) => {
+        // If a scenario wasn't selected via chips, or user typed custom text, create a generic scenario
+        if (!scenario || (customInput && customInput !== scenario.userInput)) {
+            setScenario({
+                type: 'custom',
+                userInput: customInput || SCENARIOS.restaurant.userInput,
+                subject: 'Custom Onboarding',
+                generatedTitle: 'Custom Playbook'
+            });
         }
-        setScreen('split');
+        setScreen('context');
     }, [scenario]);
 
-    const handleSwitchTab = useCallback((tab) => {
-        if (tab === 'progress') setScreen('dashboard');
-        else setScreen('split');
+    const handleContextComplete = useCallback((messages) => {
+        setChatHistory(messages || []);
+        setScreen('split');
     }, []);
 
     const handleGoToDashboard = useCallback(() => setScreen('dashboard'), []);
@@ -30,20 +37,28 @@ export default function App() {
 
     return (
         <>
-            {screen !== 'welcome' && <TopBar currentScreen={screen} onSwitchTab={handleSwitchTab} />}
             <WelcomeScreen
                 active={screen === 'welcome'}
                 scenario={scenario}
                 onStart={handleStart}
                 onFillExample={handleFillExample}
             />
-            {screen !== 'welcome' && (
+
+            <ContextChatScreen
+                active={screen === 'context'}
+                scenario={scenario}
+                onComplete={handleContextComplete}
+            />
+
+            {(screen === 'split' || screen === 'dashboard') && (
                 <SplitScreen
                     active={screen === 'split'}
                     scenario={scenario}
+                    chatHistory={chatHistory}
                     onGoToDashboard={handleGoToDashboard}
                 />
             )}
+
             {screen === 'dashboard' && (
                 <DashboardScreen
                     active={screen === 'dashboard'}

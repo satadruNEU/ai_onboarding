@@ -81,7 +81,7 @@ export default function WelcomeScreen({ active, onStart, scenario, onFillExample
     const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
 
-    const handleStart = () => onStart();
+    const handleStart = () => onStart(inputValue);
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStart(); }
