@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight, Monitor, Tablet, Smartphone, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
 import SubjectPanel from './SubjectPanel';
 import EmployeeOverlay from './EmployeeOverlay';
 
@@ -27,12 +27,21 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     const [inputValue, setInputValue] = useState('');
     const [rightTab, setRightTab] = useState('playbook'); // playbook | employee
     const [revealedCount, setRevealedCount] = useState(0); // how many groups have fully revealed
-    const [panelOpen, setPanelOpen] = useState(false);
-    const [panelSubject, setPanelSubject] = useState(null);
+    const [isThinking, setIsThinking] = useState(false);
+    const [showSidebar, setShowSidebar] = useState(false);
+    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [previewDevice, setPreviewDevice] = useState('mobile');
     const [panelGroup, setPanelGroup] = useState(null);
     const [panelColor, setPanelColor] = useState(null);
+    const [hiddenGroups, setHiddenGroups] = useState([]);
+    const [addedGroups, setAddedGroups] = useState([]);
+
     const messagesEndRef = useRef(null);
     const hasInitialized = useRef(false);
+
+    const baseGroups = scenario?.groups || [];
+    const allGroups = [...baseGroups, ...addedGroups];
+    const groups = allGroups.filter(g => !hiddenGroups.includes(g.name));
 
     // Initialize chat with history
     useEffect(() => {
@@ -43,18 +52,28 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
         }
     }, [active, chatHistory]);
 
-    // Progressive reveal: reveal one group every 1.5s
+    // Progressive reveal: reveal one group every 1.5s/4.5s
     useEffect(() => {
-        if (!active || !scenario?.groups) return;
-        const total = scenario.groups.length;
-        if (revealedCount >= total) return;
+        if (!active || groups.length === 0) return;
+        const total = groups.length;
+
+        if (revealedCount >= total && total > 0) {
+            const readyMsgText = "Your playbook is ready! Here are a few things you can do next:\n\n• Edit any subject to customize content\n• Preview the employee experience\n• Ask me to generate more topics\n• Finalize and assign to your team";
+            const timer = setTimeout(() => {
+                setMessages(prev => {
+                    if (prev.some(m => m.text.includes("Your playbook is ready!"))) return prev;
+                    return [...prev, { id: Date.now(), role: 'ai', text: readyMsgText }];
+                });
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
 
         const timer = setTimeout(() => {
             setRevealedCount(prev => prev + 1);
-        }, revealedCount === 0 ? 800 : 1500);
+        }, revealedCount === 0 ? 1500 : 4500); // 1.5s then 4.5s for remaining 3 = ~15 seconds total
 
         return () => clearTimeout(timer);
-    }, [active, scenario, revealedCount]);
+    }, [active, groups.length, revealedCount]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -62,17 +81,93 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     }, [messages]);
 
     const handleSend = () => {
-        if (!inputValue.trim()) return;
-        const newMsg = { id: Date.now(), role: 'user', text: inputValue };
+        if (!inputValue.trim() || isThinking) return;
+        const text = inputValue.trim();
+        const lowerText = text.toLowerCase();
+
+        const newMsg = { id: Date.now(), role: 'user', text };
         setMessages(prev => [...prev, newMsg]);
         setInputValue('');
+        setIsThinking(true);
 
-        // Simulate AI response
+        let isRemove = lowerText.includes('remove') || lowerText.includes('delete') || lowerText.includes('hide');
+        let isAddBack = lowerText.includes('add back') || lowerText.includes('restore') || lowerText.includes('unhide');
+        let isAddNew = lowerText.includes('add new') || (lowerText.includes('add') && lowerText.includes('section')) || (lowerText.includes('add') && lowerText.includes('group'));
+
+        const matchDig = lowerText.match(/\d+/);
+        // Groups are 1-indexed for the user, so "group 3" is index 2
+        const groupNum = matchDig ? parseInt(matchDig[0], 10) - 1 : -1;
+
+        // Find target group by number or name
+        let targetGroup = null;
+        if (groupNum >= 0 && groupNum < allGroups.length) {
+            targetGroup = allGroups[groupNum];
+        } else {
+            targetGroup = allGroups.find(g => lowerText.includes(g.name.toLowerCase()));
+        }
+
         setTimeout(() => {
-            setMessages(prev => [
-                ...prev,
-                { id: Date.now() + 1, role: 'ai', text: "I've noted that. You can continue editing the playbook on the right, or let me know if you have any other preferences." }
-            ]);
+            if (isAddBack && targetGroup) {
+                setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', text: `I'll restore the ${targetGroup.name} section as asked.` }]);
+                setTimeout(() => {
+                    setHiddenGroups(prev => prev.filter(n => n !== targetGroup.name));
+
+                    setTimeout(() => {
+                        const el = document.getElementById('group-card-' + targetGroup.name.replace(/\s+/g, '-'));
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('highlight-add');
+                        }
+                    }, 100);
+
+                    setMessages(prev => [...prev, { id: Date.now() + 2, role: 'ai', text: `Done as requested! The section is back. I can do other things as well, just say it.` }]);
+                    setIsThinking(false);
+                }, 1500);
+            } else if (isRemove && targetGroup) {
+                setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', text: `I'll remove the ${targetGroup.name} section as asked.` }]);
+
+                setTimeout(() => {
+                    const el = document.getElementById('group-card-' + targetGroup.name.replace(/\s+/g, '-'));
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('highlight-remove');
+                    }
+                }, 100);
+
+                setTimeout(() => {
+                    setHiddenGroups(prev => [...prev, targetGroup.name]);
+                    setRevealedCount(prev => Math.max(0, prev - 1));
+                    setMessages(prev => [...prev, { id: Date.now() + 2, role: 'ai', text: `Done as requested! The section is removed. I can do other things as well, just say it.` }]);
+                    setIsThinking(false);
+                }, 2000);
+            } else if (isAddNew) {
+                const predefName = "Custom Operations";
+                setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', text: `I'll add a new ${predefName} section for you.` }]);
+                setTimeout(() => {
+                    setAddedGroups(prev => [...prev, {
+                        icon: '✨', name: predefName, color: '#3b82f6', subjects: ['Drafting new protocols'], count: '1 subject'
+                    }]);
+
+                    setTimeout(() => {
+                        const el = document.getElementById('group-card-' + predefName.replace(/\s+/g, '-'));
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('highlight-add');
+                        }
+                    }, 100);
+
+                    setTimeout(() => {
+                        setMessages(prev => [...prev, { id: Date.now() + 2, role: 'ai', text: `Done as requested! I've started generating the new section. I can do other things as well, just say it.` }]);
+                        setIsThinking(false);
+                    }, 4500);
+                }, 1500);
+            } else {
+                setMessages(prev => [
+                    ...prev,
+                    { id: Date.now() + 1, role: 'ai', text: "I've noted that. You can continue editing the playbook on the right, or ask me to add/remove specific sections." }
+                ]);
+                setIsThinking(false);
+            }
         }, 1200);
     };
 
@@ -84,17 +179,15 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     };
 
     const openSubject = useCallback((sub, group, color) => {
-        setPanelSubject(sub);
+        setSelectedSubject(sub);
         setPanelGroup(group);
         setPanelColor(color);
-        setPanelOpen(true);
+        setShowSidebar(true);
     }, []);
 
-    const closeSubject = useCallback(() => setPanelOpen(false), []);
+    const closeSubject = useCallback(() => setShowSidebar(false), []);
 
     if (!active || !scenario) return null;
-
-    const groups = scenario.groups || [];
 
     return (
         <>
@@ -115,18 +208,42 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                     {/* Left Panel: Chat */}
                     <div className="sv2-left">
                         <div className="sv2-chat-messages">
-                            {messages.map((msg) => (
-                                <div key={msg.id} className={`context-msg-row ${msg.role}`}>
-                                    {msg.role === 'ai' && (
-                                        <div className="context-msg-avatar">
-                                            <Bot size={16} strokeWidth={2} />
+                            {(() => {
+                                let lastAiIndex = -1;
+                                messages.forEach((m, ix) => { if (m.role === 'ai') lastAiIndex = ix; });
+
+                                return messages.map((msg, ix) => {
+                                    const isLastAi = msg.role === 'ai' && ix === lastAiIndex;
+                                    return (
+                                        <div key={msg.id} className={`context-msg-row ${msg.role}`}>
+                                            {msg.role === 'ai' && (
+                                                <div className="context-msg-avatar">
+                                                    <Bot size={16} strokeWidth={2} />
+                                                </div>
+                                            )}
+                                            <div className="context-msg-content">
+                                                <div className="context-msg-bubble">
+                                                    {msg.text.split('\n').map((line, lineIx, arr) => (
+                                                        <span key={lineIx}>
+                                                            {line}
+                                                            {lineIx !== arr.length - 1 && <br />}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                {msg.role === 'ai' && (
+                                                    <div className="context-msg-actions">
+                                                        <div className={`context-msg-btn-group ${isLastAi ? 'visible' : ''}`}>
+                                                            <button className="context-action-btn" title="Like"><ThumbsUp size={12} /></button>
+                                                            <button className="context-action-btn" title="Dislike"><ThumbsDown size={12} /></button>
+                                                            <button className="context-action-btn" title="Copy"><Copy size={12} /></button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-                                    <div className="context-msg-bubble">
-                                        {msg.text}
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                                });
+                            })()}
                             <div ref={messagesEndRef} />
                         </div>
 
@@ -175,12 +292,15 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                                     Employee preview
                                 </button>
                             </div>
-                            <div className="sv2-right-toggle">
-                                {rightTab === 'playbook' ? (
-                                    <ToggleLeft size={20} strokeWidth={1.5} />
-                                ) : (
-                                    <ToggleRight size={20} strokeWidth={1.5} />
-                                )}
+
+                            <div className="sv2-right-actions-row">
+                                <div className="sv2-right-toggle">
+                                    {rightTab === 'playbook' ? (
+                                        <ToggleLeft size={20} strokeWidth={1.5} />
+                                    ) : (
+                                        <ToggleRight size={20} strokeWidth={1.5} />
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -204,6 +324,7 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
 
                                             return (
                                                 <div
+                                                    id={'group-card-' + g.name.replace(/\s+/g, '-')}
                                                     className={`sv2-group-card ${isRevealed ? 'revealed' : 'skeleton'} ${isCurrent ? 'just-revealed' : ''}`}
                                                     key={gi}
                                                 >
@@ -257,8 +378,30 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                             )}
 
                             {rightTab === 'employee' && (
-                                <div className="sv2-employee-wrap">
-                                    <EmployeeOverlay scenario={scenario} />
+                                <div className="sv2-employee-preview">
+                                    <div className="lt-floating-switcher">
+                                        <div className="lt-device-switcher">
+                                            <button
+                                                className={`lt-device-btn ${previewDevice === 'desktop' ? 'active' : ''}`}
+                                                onClick={() => setPreviewDevice('desktop')}
+                                            >
+                                                <Monitor size={14} strokeWidth={2} />
+                                            </button>
+                                            <button
+                                                className={`lt-device-btn ${previewDevice === 'tablet' ? 'active' : ''}`}
+                                                onClick={() => setPreviewDevice('tablet')}
+                                            >
+                                                <Tablet size={14} strokeWidth={2} />
+                                            </button>
+                                            <button
+                                                className={`lt-device-btn ${previewDevice === 'mobile' ? 'active' : ''}`}
+                                                onClick={() => setPreviewDevice('mobile')}
+                                            >
+                                                <Smartphone size={14} strokeWidth={2} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <EmployeeOverlay scenario={scenario} deviceType={previewDevice} />
                                 </div>
                             )}
                         </div>
@@ -267,9 +410,9 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
             </div>
 
             <SubjectPanel
-                isOpen={panelOpen}
+                isOpen={showSidebar}
                 onClose={closeSubject}
-                subjectName={panelSubject}
+                subjectName={selectedSubject}
                 groupName={panelGroup}
                 groupColor={panelColor}
             />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowUp, Paperclip, Bot } from 'lucide-react';
+import { ArrowUp, Paperclip, Bot, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
 
 const CONVERSATION_SCRIPT = [
     {
@@ -163,8 +163,15 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
                                     <Bot size={16} strokeWidth={2} />
                                 </div>
                             )}
-                            <div className="context-msg-bubble">
-                                {msg.text}
+                            <div className="context-msg-content">
+                                <div className="context-msg-bubble">
+                                    {msg.text.split('\n').map((line, lineIx, arr) => (
+                                        <span key={lineIx}>
+                                            {line}
+                                            {lineIx !== arr.length - 1 && <br />}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     ))}

@@ -3,14 +3,14 @@ import { BookOpen, FolderOpen, Users, User, Target, Shield, Star, Lightbulb, Loc
 const MODULE_ICONS = [BookOpen, Shield, Star, Lightbulb, Target];
 const DURATIONS = ['8 min', '6 min', '10 min', '7 min', '9 min'];
 
-export default function EmployeeOverlay({ scenario }) {
+export default function EmployeeOverlay({ scenario, deviceType = 'mobile' }) {
     if (!scenario) return null;
     const g = scenario.groups[0];
 
     return (
-        <div className="lt-phone-wrap">
-            <div className="lt-phone">
-                <div className="lt-phone-notch"></div>
+        <div className={`lt-phone-wrap wrap-${deviceType}`}>
+            <div className={`lt-phone dev-${deviceType}`}>
+                {deviceType === 'mobile' && <div className="lt-phone-notch"></div>}
                 <div className="lt-emp-screen">
                     <div className="lt-emp-hero">
                         <p className="lt-emp-greeting">Day 1 of your journey</p>
@@ -61,24 +61,26 @@ export default function EmployeeOverlay({ scenario }) {
                     </div>
                 </div>
 
-                <div className="lt-emp-bottom-nav">
-                    <div className="lt-emp-nav-item active">
-                        <BookOpen size={16} strokeWidth={1.5} />
-                        Training
+                {deviceType === 'mobile' && (
+                    <div className="lt-emp-bottom-nav">
+                        <div className="lt-emp-nav-item active">
+                            <BookOpen size={16} strokeWidth={1.5} />
+                            Training
+                        </div>
+                        <div className="lt-emp-nav-item">
+                            <FolderOpen size={16} strokeWidth={1.5} />
+                            Playbook
+                        </div>
+                        <div className="lt-emp-nav-item">
+                            <Users size={16} strokeWidth={1.5} />
+                            Team
+                        </div>
+                        <div className="lt-emp-nav-item">
+                            <User size={16} strokeWidth={1.5} />
+                            Profile
+                        </div>
                     </div>
-                    <div className="lt-emp-nav-item">
-                        <FolderOpen size={16} strokeWidth={1.5} />
-                        Playbook
-                    </div>
-                    <div className="lt-emp-nav-item">
-                        <Users size={16} strokeWidth={1.5} />
-                        Team
-                    </div>
-                    <div className="lt-emp-nav-item">
-                        <User size={16} strokeWidth={1.5} />
-                        Profile
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );
