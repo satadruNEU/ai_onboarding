@@ -237,7 +237,7 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                 {/* Top Navigation Bar */}
                 <nav className="context-nav">
                     <div className="context-nav-left">
-                        <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                        <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif", cursor: 'pointer' }} onClick={onGoToDashboard}>
                             Trainual<sup className="context-nav-sup">®</sup>
                         </div>
                         <span className="context-nav-slash">/</span>
