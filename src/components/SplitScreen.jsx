@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight, Monitor, Tablet, Smartphone, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
+import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight, Monitor, Tablet, Smartphone, ThumbsUp, ThumbsDown, Copy, ChevronDown, CircleDashed, Settings, Share, Play, User, Check, RefreshCw } from 'lucide-react';
 import SubjectPanel from './SubjectPanel';
 import EmployeeOverlay from './EmployeeOverlay';
 
@@ -22,6 +22,31 @@ function getGroupIcon(name) {
     return GROUP_ICONS[name] || BookOpen;
 }
 
+function TypewriterText({ text, speed = 15 }) {
+    const [displayedText, setDisplayedText] = useState('');
+
+    useEffect(() => {
+        let i = 0;
+        const interval = setInterval(() => {
+            setDisplayedText(text.slice(0, i));
+            i++;
+            if (i > text.length) clearInterval(interval);
+        }, speed);
+        return () => clearInterval(interval);
+    }, [text, speed]);
+
+    return (
+        <>
+            {displayedText.split('\n').map((line, lineIx, arr) => (
+                <span key={lineIx}>
+                    {line}
+                    {lineIx !== arr.length - 1 && <br />}
+                </span>
+            ))}
+        </>
+    );
+}
+
 export default function SplitScreen({ active, scenario, chatHistory, onGoToDashboard }) {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
@@ -35,6 +60,23 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     const [panelColor, setPanelColor] = useState(null);
     const [hiddenGroups, setHiddenGroups] = useState([]);
     const [addedGroups, setAddedGroups] = useState([]);
+    const [showPlaybookMenu, setShowPlaybookMenu] = useState(false);
+    const [lastSaved, setLastSaved] = useState('');
+
+    useEffect(() => {
+        setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, []);
+
+    // Close dropdown on outside clicks
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.playbook-dropdown-container')) {
+                setShowPlaybookMenu(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     const messagesEndRef = useRef(null);
     const hasInitialized = useRef(false);
@@ -62,7 +104,7 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
             const timer = setTimeout(() => {
                 setMessages(prev => {
                     if (prev.some(m => m.text.includes("Your playbook is ready!"))) return prev;
-                    return [...prev, { id: Date.now(), role: 'ai', text: readyMsgText }];
+                    return [...prev, { id: Date.now(), role: 'ai', text: readyMsgText, isTypewriter: true }];
                 });
             }, 1000);
             return () => clearTimeout(timer);
@@ -191,15 +233,66 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
 
     return (
         <>
-            <div className="sv2-screen">
+            <div className="sv2-screen sv2-screen-enter">
                 {/* Top Navigation Bar */}
                 <nav className="context-nav">
-                    <div className="context-nav-inner">
+                    <div className="context-nav-left">
                         <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
                             Trainual<sup className="context-nav-sup">®</sup>
                         </div>
-                        <div className="context-nav-right">
-                            <div className="context-nav-avatar"></div>
+                        <span className="context-nav-slash">/</span>
+                        <button className="context-nav-item">
+                            <div className="context-nav-workspace-icon">
+                            </div>
+                            <span className="hidden sm:inline">Satadru's Workspace</span>
+                            <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                    </div>
+
+                    <div className="context-nav-center hidden md:flex">
+                        <button className="context-nav-item context-nav-item-muted">
+                            <CircleDashed size={14} />
+                            Drafts
+                        </button>
+                        <span className="context-nav-slash" style={{ fontSize: '0.9rem', margin: '0 2px' }}>/</span>
+                        <div className="relative playbook-dropdown-container">
+                            <button className="context-nav-item" onClick={() => setShowPlaybookMenu(!showPlaybookMenu)}>
+                                <FileText size={14} />
+                                {scenario.bizName}
+                                <ChevronDown size={14} className="text-gray-400" />
+                            </button>
+                            {showPlaybookMenu && (
+                                <div className="context-dropdown-menu">
+                                    <div className="context-dropdown-group">
+                                        <div className="context-dropdown-item">Rename</div>
+                                        <div className="context-dropdown-item">Add to Favorites</div>
+                                        <div className="context-dropdown-item">Duplicate...</div>
+                                    </div>
+                                    <div className="context-dropdown-separator"></div>
+                                    <div className="context-dropdown-group">
+                                        <div className="context-dropdown-item">Settings</div>
+                                        <div className="context-dropdown-item">Transfer...</div>
+                                        <div className="context-dropdown-item danger">Delete</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="context-nav-right">
+                        <button className="context-nav-btn hidden sm:flex">
+                            <Settings size={14} />
+                            <span className="hidden lg:inline">Settings</span>
+                        </button>
+                        <button className="context-nav-btn hidden sm:flex">
+                            <Share size={14} />
+                            <span className="hidden lg:inline">Share</span>
+                        </button>
+                        <button className="context-nav-btn context-nav-publish">
+                            <Play size={12} fill="currentColor" />
+                            <span className="hidden sm:inline">Publish</span>
+                        </button>
+                        <div className="context-nav-avatar-btn" title="Your Profile">
                         </div>
                     </div>
                 </nav>
@@ -223,12 +316,16 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                                             )}
                                             <div className="context-msg-content">
                                                 <div className="context-msg-bubble">
-                                                    {msg.text.split('\n').map((line, lineIx, arr) => (
-                                                        <span key={lineIx}>
-                                                            {line}
-                                                            {lineIx !== arr.length - 1 && <br />}
-                                                        </span>
-                                                    ))}
+                                                    {msg.isTypewriter ? (
+                                                        <TypewriterText text={msg.text} />
+                                                    ) : (
+                                                        msg.text.split('\n').map((line, lineIx, arr) => (
+                                                            <span key={lineIx}>
+                                                                {line}
+                                                                {lineIx !== arr.length - 1 && <br />}
+                                                            </span>
+                                                        ))
+                                                    )}
                                                 </div>
                                                 {msg.role === 'ai' && (
                                                     <div className="context-msg-actions">
@@ -294,19 +391,24 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                             </div>
 
                             <div className="sv2-right-actions-row">
-                                <div className="sv2-right-toggle">
-                                    {rightTab === 'playbook' ? (
-                                        <ToggleLeft size={20} strokeWidth={1.5} />
-                                    ) : (
-                                        <ToggleRight size={20} strokeWidth={1.5} />
-                                    )}
+                                <div className="sv2-saved-text">
+                                    <RefreshCw size={12} strokeWidth={2} />
+                                    <span>Last saved at {lastSaved}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Builder content */}
                         <div className="sv2-right-body">
-                            {rightTab === 'playbook' && (
+                            {showSidebar ? (
+                                <SubjectPanel
+                                    isOpen={showSidebar}
+                                    onClose={closeSubject}
+                                    subjectName={selectedSubject}
+                                    groupName={panelGroup}
+                                    groupColor={panelColor}
+                                />
+                            ) : rightTab === 'playbook' ? (
                                 <div className="sv2-playbook">
                                     <div className="sv2-playbook-header">
                                         <p className="sv2-eyebrow">Generated for you</p>
@@ -375,9 +477,7 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                                         })}
                                     </div>
                                 </div>
-                            )}
-
-                            {rightTab === 'employee' && (
+                            ) : rightTab === 'employee' ? (
                                 <div className="sv2-employee-preview">
                                     <div className="lt-floating-switcher">
                                         <div className="lt-device-switcher">
@@ -403,19 +503,11 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                                     </div>
                                     <EmployeeOverlay scenario={scenario} deviceType={previewDevice} />
                                 </div>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 </div>
             </div>
-
-            <SubjectPanel
-                isOpen={showSidebar}
-                onClose={closeSubject}
-                subjectName={selectedSubject}
-                groupName={panelGroup}
-                groupColor={panelColor}
-            />
         </>
     );
 }

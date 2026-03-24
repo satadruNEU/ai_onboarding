@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowUp, Paperclip, Bot, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
+import { ArrowUp, Paperclip, Bot, Briefcase, ChevronDown, CircleDashed, FileText, Settings, Share, Play, User } from 'lucide-react';
 
 const CONVERSATION_SCRIPT = [
     {
@@ -48,6 +48,20 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
     const [isThinking, setIsThinking] = useState(false);
     const [currentStep, setCurrentStep] = useState(0); // 0 = waiting for first AI Q, 1-4 = which question we're on
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showPlaybookMenu, setShowPlaybookMenu] = useState(false);
+    const [isExiting, setIsExiting] = useState(false);
+
+    // Close dropdown on outside clicks
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.playbook-dropdown-container')) {
+                setShowPlaybookMenu(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     const messagesEndRef = useRef(null);
     const hasInitialized = useRef(false);
 
@@ -111,7 +125,10 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
                 setShowSuggestions(false);
 
                 // Transition to split screen — pass full chat history
-                setTimeout(() => onComplete(finalMessages), 2500);
+                setTimeout(() => {
+                    setIsExiting(true);
+                    setTimeout(() => onComplete(finalMessages), 400);
+                }, 2000);
             }
         }, delay);
     }, [currentStep, onComplete]);
@@ -140,15 +157,66 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
         : [];
 
     return (
-        <div className="context-screen">
+        <div className={`context-screen ${isExiting ? 'context-screen-exit' : ''}`}>
             {/* Top Navigation Bar */}
             <nav className="context-nav">
-                <div className="context-nav-inner">
+                <div className="context-nav-left">
                     <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
                         Trainual<sup className="context-nav-sup">®</sup>
                     </div>
-                    <div className="context-nav-right">
-                        <div className="context-nav-avatar"></div>
+                    <span className="context-nav-slash">/</span>
+                    <button className="context-nav-item">
+                        <div className="context-nav-workspace-icon">
+                        </div>
+                        <span className="hidden sm:inline">Satadru's Workspace</span>
+                        <ChevronDown size={14} className="text-gray-400" />
+                    </button>
+                </div>
+
+                <div className="context-nav-center hidden md:flex">
+                    <button className="context-nav-item context-nav-item-muted">
+                        <CircleDashed size={14} />
+                        Drafts
+                    </button>
+                    <span className="context-nav-slash" style={{ fontSize: '0.9rem', margin: '0 2px' }}>/</span>
+                    <div className="relative playbook-dropdown-container">
+                        <button className="context-nav-item" onClick={() => setShowPlaybookMenu(!showPlaybookMenu)}>
+                            <FileText size={14} />
+                            {scenario?.bizName || "New Playbook"}
+                            <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {showPlaybookMenu && (
+                            <div className="context-dropdown-menu">
+                                <div className="context-dropdown-group">
+                                    <div className="context-dropdown-item">Rename</div>
+                                    <div className="context-dropdown-item">Add to Favorites</div>
+                                    <div className="context-dropdown-item">Duplicate...</div>
+                                </div>
+                                <div className="context-dropdown-separator"></div>
+                                <div className="context-dropdown-group">
+                                    <div className="context-dropdown-item">Settings</div>
+                                    <div className="context-dropdown-item">Transfer...</div>
+                                    <div className="context-dropdown-item danger">Delete</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="context-nav-right">
+                    <button className="context-nav-btn hidden sm:flex">
+                        <Settings size={14} />
+                        <span className="hidden lg:inline">Settings</span>
+                    </button>
+                    <button className="context-nav-btn hidden sm:flex">
+                        <Share size={14} />
+                        <span className="hidden lg:inline">Share</span>
+                    </button>
+                    <button className="context-nav-btn context-nav-publish">
+                        <Play size={12} fill="currentColor" />
+                        <span className="hidden sm:inline">Publish</span>
+                    </button>
+                    <div className="context-nav-avatar-btn" title="Your Profile">
                     </div>
                 </div>
             </nav>
