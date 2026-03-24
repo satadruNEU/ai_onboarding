@@ -34,6 +34,11 @@ export default function App() {
 
     const handleGoToDashboard = useCallback(() => setScreen('dashboard'), []);
     const handleBackToPlaybook = useCallback(() => setScreen('split'), []);
+    const handleSignOut = useCallback(() => {
+        setScreen('welcome');
+        setScenario(null);
+        setChatHistory([]);
+    }, []);
 
     return (
         <>
@@ -48,6 +53,7 @@ export default function App() {
                 active={screen === 'context'}
                 scenario={scenario}
                 onComplete={handleContextComplete}
+                onGoToDashboard={handleGoToDashboard}
             />
 
             {(screen === 'split' || screen === 'dashboard') && (
@@ -56,6 +62,7 @@ export default function App() {
                     scenario={scenario}
                     chatHistory={chatHistory}
                     onGoToDashboard={handleGoToDashboard}
+                    onSignOut={handleSignOut}
                 />
             )}
 
@@ -64,6 +71,9 @@ export default function App() {
                     active={screen === 'dashboard'}
                     scenario={scenario}
                     onBack={handleBackToPlaybook}
+                    onStart={handleStart}
+                    onFillExample={handleFillExample}
+                    onSignOut={handleSignOut}
                 />
             )}
         </>

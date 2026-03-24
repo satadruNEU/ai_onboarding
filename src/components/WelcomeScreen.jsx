@@ -114,9 +114,24 @@ export default function WelcomeScreen({ active, onStart, scenario, onFillExample
                         <a className="welcome-nav-link" href="#">Templates</a>
                         <a className="welcome-nav-link" href="#">About</a>
                         <a className="welcome-nav-link" href="#">Pricing</a>
-                        <a className="welcome-nav-link" href="#">changelog</a>
+                        <a className="welcome-nav-link" href="#">Changelog</a>
                     </div>
-                    <div className="welcome-nav-profile"></div>
+                    <div className="welcome-nav-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <a href="#" className="welcome-nav-link" style={{ fontWeight: 500 }}>Log in</a>
+                        <button style={{
+                            background: '#fff',
+                            color: '#000',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit'
+                        }}>
+                            Book a demo
+                        </button>
+                    </div>
                 </div>
             </nav>
 

@@ -3,7 +3,7 @@ import { ArrowUp, Paperclip, Bot, Briefcase, ChevronDown, CircleDashed, FileText
 
 const CONVERSATION_SCRIPT = [
     {
-        ai: "Thanks for sharing! To make this playbook really effective — who exactly will be going through it?",
+        ai: "Hey Satadru, Welcome to Trainual! \n I am here to help you create a training playbook for your team. \n To make this playbook really effective — who exactly will be going through it?",
         suggestions: [
             "New hires only",
             "Existing team members",
@@ -42,7 +42,7 @@ const CONVERSATION_SCRIPT = [
 
 const FINAL_AI_MESSAGE = "Perfect — I have everything I need. Assembling your custom playbook now...";
 
-export default function ContextChatScreen({ active, scenario, onComplete }) {
+export default function ContextChatScreen({ active, scenario, onComplete, onGoToDashboard }) {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isThinking, setIsThinking] = useState(false);
@@ -161,7 +161,7 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
             {/* Top Navigation Bar */}
             <nav className="context-nav">
                 <div className="context-nav-left">
-                    <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                    <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif", cursor: 'pointer' }} onClick={onGoToDashboard}>
                         Trainual<sup className="context-nav-sup">®</sup>
                     </div>
                     <span className="context-nav-slash">/</span>
@@ -212,7 +212,7 @@ export default function ContextChatScreen({ active, scenario, onComplete }) {
                         <Share size={14} />
                         <span className="hidden lg:inline">Share</span>
                     </button>
-                    <button className="context-nav-btn context-nav-publish">
+                    <button className="context-nav-btn context-nav-publish" disabled>
                         <Play size={12} fill="currentColor" />
                         <span className="hidden sm:inline">Publish</span>
                     </button>

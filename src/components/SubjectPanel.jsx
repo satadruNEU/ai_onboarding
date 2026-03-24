@@ -229,7 +229,7 @@ export default function SubjectPanel({ isOpen, onClose, subjectName, groupName, 
                 boxShadow: 'none',
                 borderRadius: '12px',
                 overflow: 'hidden',
-                animation: 'fade-in-scale 0.25s forwards'
+                animation: 'fade-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
         >
             <div className="lt-panel-header">

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight, Monitor, Tablet, Smartphone, ThumbsUp, ThumbsDown, Copy, ChevronDown, CircleDashed, Settings, Share, Play, User, Check, RefreshCw } from 'lucide-react';
+import { ArrowUp, Paperclip, Bot, FileText, ClipboardList, BookOpen, Shield, Users, Briefcase, ToggleLeft, ToggleRight, Monitor, Tablet, Smartphone, ThumbsUp, ThumbsDown, Copy, ChevronDown, CircleDashed, Settings, Share, Play, User, Check, RefreshCw, Link, Mail, UploadCloud, CheckCircle } from 'lucide-react';
+import Confetti from 'react-confetti';
 import SubjectPanel from './SubjectPanel';
 import EmployeeOverlay from './EmployeeOverlay';
+import ProfileDropdown from './ProfileDropdown';
 
 // Map group names to lucide icons
 const GROUP_ICONS = {
@@ -47,7 +49,7 @@ function TypewriterText({ text, speed = 15 }) {
     );
 }
 
-export default function SplitScreen({ active, scenario, chatHistory, onGoToDashboard }) {
+export default function SplitScreen({ active, scenario, chatHistory, onGoToDashboard, onSignOut }) {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [rightTab, setRightTab] = useState('playbook'); // playbook | employee
@@ -62,6 +64,44 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     const [addedGroups, setAddedGroups] = useState([]);
     const [showPlaybookMenu, setShowPlaybookMenu] = useState(false);
     const [lastSaved, setLastSaved] = useState('');
+    const [showPublishMenu, setShowPublishMenu] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [publishSuccess, setPublishSuccess] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [toastHiding, setToastHiding] = useState(false);
+    const [openingSubject, setOpeningSubject] = useState(null);
+
+    // Publish Dropdown states
+    const [invitedEmails, setInvitedEmails] = useState([]);
+    const [emailInput, setEmailInput] = useState('');
+    const [assignGroup, setAssignGroup] = useState('');
+
+    const handleAddEmail = () => {
+        if (emailInput && !invitedEmails.includes(emailInput)) {
+            // Split by comma if user pasted multiple
+            const emails = emailInput.split(',').map(e => e.trim()).filter(e => e);
+            setInvitedEmails(prev => [...prev, ...emails.filter(e => !prev.includes(e))]);
+            setEmailInput('');
+        }
+    };
+
+    const handlePublishFlow = () => {
+        setIsPublishing(true);
+        setTimeout(() => {
+            setIsPublishing(false);
+            setPublishSuccess(true);
+            setShowConfetti(true);
+
+            // Start hiding toast at 4.6s so it's gone by 5s.
+            setTimeout(() => {
+                setToastHiding(true);
+            }, 4600);
+
+            setTimeout(() => {
+                if (onGoToDashboard) onGoToDashboard();
+            }, 5000);
+        }, 1500);
+    };
 
     useEffect(() => {
         setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -95,11 +135,20 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     }, [active, chatHistory]);
 
     // Progressive reveal: reveal one group every 1.5s/4.5s
+    // Store in a global variable so navigation away and back doesn't reset it
     useEffect(() => {
         if (!active || groups.length === 0) return;
         const total = groups.length;
 
+        // If we've already revealed everything before (e.g., navigated to dashboard and back), 
+        // stay fully revealed
+        if (window.__trainual_has_revealed) {
+            setRevealedCount(total);
+            return;
+        }
+
         if (revealedCount >= total && total > 0) {
+            window.__trainual_has_revealed = true;
             const readyMsgText = "Your playbook is ready! Here are a few things you can do next:\n\n• Edit any subject to customize content\n• Preview the employee experience\n• Ask me to generate more topics\n• Finalize and assign to your team";
             const timer = setTimeout(() => {
                 setMessages(prev => {
@@ -121,6 +170,15 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // Clear publish state when entering this screen
+    useEffect(() => {
+        if (active) {
+            setPublishSuccess(false);
+            setShowConfetti(false);
+            setToastHiding(false);
+        }
+    }, [active]);
 
     const handleSend = () => {
         if (!inputValue.trim() || isThinking) return;
@@ -220,11 +278,15 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
         }
     };
 
-    const openSubject = useCallback((sub, group, color) => {
-        setSelectedSubject(sub);
-        setPanelGroup(group);
-        setPanelColor(color);
-        setShowSidebar(true);
+    const openSubject = useCallback((sub, group, color, key) => {
+        setOpeningSubject(key);
+        setTimeout(() => {
+            setSelectedSubject(sub);
+            setPanelGroup(group);
+            setPanelColor(color);
+            setShowSidebar(true);
+            setOpeningSubject(null);
+        }, 200);
     }, []);
 
     const closeSubject = useCallback(() => setShowSidebar(false), []);
@@ -288,12 +350,105 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                             <Share size={14} />
                             <span className="hidden lg:inline">Share</span>
                         </button>
-                        <button className="context-nav-btn context-nav-publish">
-                            <Play size={12} fill="currentColor" />
-                            <span className="hidden sm:inline">Publish</span>
-                        </button>
-                        <div className="context-nav-avatar-btn" title="Your Profile">
+                        <div className="relative playbook-dropdown-container">
+                            <button
+                                className={`context-nav-btn context-nav-publish ${isPublishing ? 'opacity-80' : ''}`}
+                                onClick={() => !isPublishing && setShowPublishMenu(!showPublishMenu)}
+                            >
+                                {isPublishing ? (
+                                    <RefreshCw size={12} className="animate-spin" />
+                                ) : (
+                                    <Play size={12} fill="currentColor" />
+                                )}
+                                <span className="hidden sm:inline">{isPublishing ? 'Publishing...' : 'Publish'}</span>
+                                {!isPublishing && <ChevronDown size={14} className="ml-1 opacity-70" />}
+                            </button>
+                            {showPublishMenu && !isPublishing && (
+                                <div className="context-dropdown-menu" style={{ right: 0, left: 'auto', width: 340, padding: 0 }}>
+                                    <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e5e7eb' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                                            <h3 style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0, color: '#111827' }}>Invite employees</h3>
+                                            <button style={{ background: 'none', border: 'none', padding: 0, color: '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <Link size={12} />
+                                                <span style={{ fontSize: '0.75rem' }}>Copy link</span>
+                                            </button>
+                                        </div>
+                                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>Invite your team members to this playbook.</p>
+                                    </div>
+
+                                    <div style={{ padding: 16 }}>
+                                        {/* Email input row */}
+                                        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                            <input
+                                                type="email"
+                                                placeholder="Add comma separated emails to invite"
+                                                value={emailInput}
+                                                onChange={(e) => setEmailInput(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddEmail(); }}
+                                                style={{ flex: 1, height: 32, padding: '0 12px', fontSize: '0.8125rem', borderRadius: 6, border: '1px solid #e5e7eb', outline: 'none', color: '#111827' }}
+                                            />
+                                            <button
+                                                onClick={handleAddEmail}
+                                                style={{ height: 32, padding: '0 12px', fontSize: '0.8125rem', fontWeight: 500, background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 6, color: '#374151', cursor: 'pointer' }}
+                                            >
+                                                Invite
+                                            </button>
+                                        </div>
+
+                                        {/* Added employees */}
+                                        {invitedEmails.length > 0 && (
+                                            <div style={{ marginBottom: 16 }}>
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 500, color: '#374151', marginBottom: 8 }}>Added employees</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
+                                                    {invitedEmails.map(email => (
+                                                        <div key={email} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                                                            <span style={{ fontSize: '0.8125rem', color: '#111827' }}>{email}</span>
+                                                            <button onClick={() => setInvitedEmails(invitedEmails.filter(e => e !== email))} style={{ color: '#9ca3af', cursor: 'pointer', background: 'none', border: 'none', padding: 0, fontSize: '1rem', lineHeight: 1 }}>×</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Group Assignment Dropdown */}
+                                                <div style={{ marginTop: 12 }}>
+                                                    <label style={{ fontSize: '0.75rem', fontWeight: 500, color: '#374151', display: 'block', marginBottom: 6 }}>Assign to group <span style={{ color: '#ef4444' }}>*</span></label>
+                                                    <select
+                                                        value={assignGroup}
+                                                        onChange={(e) => setAssignGroup(e.target.value)}
+                                                        style={{ width: '100%', height: 32, padding: '0 12px', fontSize: '0.8125rem', borderRadius: 6, border: '1px solid #e5e7eb', outline: 'none', background: '#fff', color: assignGroup ? '#111827' : '#9ca3af' }}
+                                                    >
+                                                        <option value="" disabled>Select a group</option>
+                                                        {scenario?.groups?.map(g => (
+                                                            <option key={g.name} value={g.name}>{g.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Publish Button */}
+                                        <button
+                                            disabled={invitedEmails.length > 0 && !assignGroup}
+                                            onClick={() => {
+                                                setShowPublishMenu(false);
+                                                handlePublishFlow();
+                                            }}
+                                            style={{
+                                                width: '100%', height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                background: (invitedEmails.length > 0 && !assignGroup) ? '#e5e7eb' : '#111827',
+                                                color: (invitedEmails.length > 0 && !assignGroup) ? '#9ca3af' : '#fff',
+                                                border: 'none', borderRadius: 6, fontSize: '0.875rem', fontWeight: 500,
+                                                cursor: (invitedEmails.length > 0 && !assignGroup) ? 'not-allowed' : 'pointer',
+                                                transition: 'background 0.2s'
+                                            }}
+                                        >
+                                            <Play size={14} fill="currentColor" />
+                                            Publish
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
+                        <ProfileDropdown onSignOut={onSignOut} />
                     </div>
                 </nav>
 
@@ -458,17 +613,21 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                                                                 <div className="sv2-group-badge">{g.count.split(' ')[0]} subjects</div>
                                                             </div>
                                                             <div className="sv2-group-subjects">
-                                                                {g.subjects.map((sub, si) => (
+                                                                {g.subjects.map((sub, si) => {
+                                                                    const subjectKey = `${g.name}-${si}`;
+                                                                    const isOpening = openingSubject === subjectKey;
+                                                                    return (
                                                                     <div
-                                                                        className="sv2-subject-row"
+                                                                        className={`sv2-subject-row ${isOpening ? 'opening' : ''}`}
                                                                         key={si}
-                                                                        onClick={() => openSubject(sub, g.name, g.color)}
+                                                                        style={isOpening ? { transform: 'scale(0.98)', opacity: 0.7, background: 'rgba(0,0,0,0.04)', transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease' } : { transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease' }}
+                                                                        onClick={() => openSubject(sub, g.name, g.color, subjectKey)}
                                                                     >
                                                                         <FileText size={14} strokeWidth={1.5} className="sv2-subject-icon" />
                                                                         <span className="sv2-subject-name">{sub}</span>
                                                                         <span className="sv2-subject-status">{si === 0 ? 'Draft ready' : 'Outline ready'}</span>
                                                                     </div>
-                                                                ))}
+                                                                )})}
                                                             </div>
                                                         </>
                                                     )}
@@ -508,6 +667,34 @@ export default function SplitScreen({ active, scenario, chatHistory, onGoToDashb
                     </div>
                 </div>
             </div>
+
+
+
+            {/* Success Toast Overlay */}
+            {
+                publishSuccess && (
+                    <div className="sv2-publish-toast-container" style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60, pointerEvents: 'none' }}>
+                        <div className="sv2-publish-toast" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', animation: toastHiding ? 'slideUpFadeOut 0.4s ease forwards' : 'slideDownFadeIn 0.4s ease' }}>
+                            <CheckCircle size={24} color="#22c55e" />
+                            <div>
+                                <div className="sv2-publish-toast-title" style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827' }}>Playbook published!</div>
+                                <div className="sv2-publish-toast-sub" style={{ fontSize: '0.8125rem', color: '#6b7280' }}>Taking you to the dashboard...</div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {showConfetti && (
+                <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }}>
+                    <Confetti
+                        width={window.innerWidth}
+                        height={window.innerHeight}
+                        recycle={false}
+                        numberOfPieces={450}
+                        gravity={0.15}
+                    />
+                </div>
+            )}
         </>
     );
 }
