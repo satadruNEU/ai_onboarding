@@ -5,11 +5,13 @@ import {
     Home, FolderOpen, PieChart, GraduationCap, Search, Plus, UserPlus,
     HelpCircle, Bell, Send, ArrowUp, Paperclip, Utensils, ShoppingBag, Rocket, ArrowRight,
     Mail, Pencil, ListChecks, ExternalLink, X, Sparkles,
-    Settings2
+    Settings2,
+    CheckCircle2
 } from 'lucide-react';
 import { SCENARIOS } from '../data/scenarios';
 import { TEAM_DATA, ACTIVITY_DATA } from '../data/teamData';
 import ProfileDropdown from './ProfileDropdown';
+import InviteModal from './InviteModal';
 
 // Map group names to lucide icons (same mapping as SplitScreen)
 const GROUP_ICONS = {
@@ -245,6 +247,9 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
     const [showNewChat, setShowNewChat] = useState(false);
     const [showNextSteps, setShowNextSteps] = useState(true);
     const [nextStepsStage, setNextStepsStage] = useState('hidden'); // hidden | expanding | visible
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [isExiting, setIsExiting] = useState(false); // Added for screen transition
 
     const scenarioKey = scenario ? Object.keys(SCENARIOS).find(k => SCENARIOS[k] === scenario) || 'restaurant' : 'restaurant';
     const team = TEAM_DATA[scenarioKey] || TEAM_DATA.restaurant;
@@ -257,6 +262,11 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
     const avgPct = Math.round(team.reduce((s, m) => s + m.pct, 0) / total);
 
     const groupPcts = [72, 55, 88, 30];
+
+    const handleInviteSuccess = (count, groupName) => {
+        setToastMessage(`Successfully invited ${count} employee${count === 1 ? '' : 's'} to ${groupName}.`);
+        setTimeout(() => setToastMessage(''), 4000); // Auto-dismiss
+    };
 
     useEffect(() => {
         if (!active || showNewChat) return;
@@ -333,7 +343,7 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
         }, 100);
     }, [active, showNewChat, avgPct, completed, onTrack, atRisk]);
 
-    if (!scenario) return null;
+    if (!scenario && !isExiting) return null;
 
     return (
         <div className={`db-screen ${active ? 'sv2-screen-enter' : ''}`}>
@@ -490,6 +500,7 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
                                                 title: 'Invite employees',
                                                 desc: 'Send invites to your team so they can start training right away.',
                                                 cta: 'Send invites',
+                                                onClick: () => setShowInviteModal(true)
                                             },
                                             {
                                                 icon: Pencil,
@@ -524,7 +535,7 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
                                                     </div>
                                                     <div className="db-next-step-name">{step.title}</div>
                                                     <div className="db-next-step-desc">{step.desc}</div>
-                                                    <button className="db-next-step-cta" style={{ color: step.color }}>
+                                                    <button className="db-next-step-cta" style={{ color: step.color }} onClick={step.onClick}>
                                                         {step.cta}
                                                         <ArrowRight size={12} strokeWidth={2} />
                                                     </button>
@@ -560,7 +571,7 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
                                         <Download size={14} strokeWidth={2} />
                                         Export
                                     </button>
-                                    <button className="db-btn" style={{ background: '#111827', color: '#fff', borderColor: '#111827' }}>
+                                    <button className="db-btn" style={{ background: '#111827', color: '#fff', borderColor: '#111827' }} onClick={() => setShowInviteModal(true)}>
                                         <UserPlus size={14} strokeWidth={2} />
                                         Invite employees
                                     </button>
@@ -680,6 +691,21 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
                     )}
                 </div>
             </div>
+
+            {/* Modals & Toasts */}
+            <InviteModal
+                isOpen={showInviteModal}
+                onClose={() => setShowInviteModal(false)}
+                groups={scenario?.groups}
+                onSend={handleInviteSuccess}
+            />
+
+            {toastMessage && (
+                <div className="db-toast animate-dd-in">
+                    <CheckCircle2 size={16} strokeWidth={2} className="text-green-500" />
+                    <span>{toastMessage}</span>
+                </div>
+            )}
         </div>
     );
 }

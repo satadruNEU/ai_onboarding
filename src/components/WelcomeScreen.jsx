@@ -114,7 +114,7 @@ export default function WelcomeScreen({ active, onStart, scenario, onFillExample
                         <a className="welcome-nav-link" href="#">Templates</a>
                         <a className="welcome-nav-link" href="#">About</a>
                         <a className="welcome-nav-link" href="#">Pricing</a>
-                        <a className="welcome-nav-link" href="#">Changelog</a>
+                        {/* <a className="welcome-nav-link" href="#">Change Log</a> */}
                     </div>
                     <div className="welcome-nav-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         <a href="#" className="welcome-nav-link" style={{ fontWeight: 500 }}>Log in</a>
@@ -170,11 +170,11 @@ export default function WelcomeScreen({ active, onStart, scenario, onFillExample
                     </div>
                 </div>
 
-                <div className="welcome-hero-chips animate-fade-rise-delay-2">
-                    Try an example:
-                    <span className="welcome-chip" onClick={() => onFillExample('restaurant')}>🍽️ Restaurant</span>
-                    <span className="welcome-chip" onClick={() => onFillExample('retail')}>🛍️ Retail store</span>
-                    <span className="welcome-chip" onClick={() => onFillExample('startup')}>🚀 Tech startup</span>
+                <div className="welcome-hero-chips">
+                    <span className="animate-fade-rise" style={{ animationDelay: '0.8s', display: 'inline-block' }}>Try an example:</span>
+                    <span className="welcome-chip animate-fade-rise" style={{ animationDelay: '0.9s' }} onClick={() => onFillExample('restaurant')}>🍽️ Restaurant</span>
+                    <span className="welcome-chip animate-fade-rise" style={{ animationDelay: '1.0s' }} onClick={() => onFillExample('retail')}>🛍️ Retail store</span>
+                    <span className="welcome-chip animate-fade-rise" style={{ animationDelay: '1.1s' }} onClick={() => onFillExample('startup')}>🚀 Tech startup</span>
                 </div>
             </section>
         </div>
