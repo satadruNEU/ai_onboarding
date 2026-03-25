@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
+import AuthScreen from './components/AuthScreen';
 import ContextChatScreen from './components/ContextChatScreen';
 import SplitScreen from './components/SplitScreen';
 import DashboardScreen from './components/DashboardScreen';
 import { SCENARIOS } from './data/scenarios';
 
 export default function App() {
-    const [screen, setScreen] = useState('welcome'); // welcome | context | split | dashboard
+    const [screen, setScreen] = useState('welcome'); // welcome | auth | context | split | dashboard
     const [scenario, setScenario] = useState(null);
     const [chatHistory, setChatHistory] = useState([]);
 
@@ -24,8 +25,12 @@ export default function App() {
                 generatedTitle: 'Custom Playbook'
             });
         }
-        setScreen('context');
+        setScreen('auth');
     }, [scenario]);
+
+    const handleAuth = useCallback(() => {
+        setScreen('context');
+    }, []);
 
     const handleContextComplete = useCallback((messages) => {
         setChatHistory(messages || []);
@@ -47,6 +52,11 @@ export default function App() {
                 scenario={scenario}
                 onStart={handleStart}
                 onFillExample={handleFillExample}
+            />
+
+            <AuthScreen
+                active={screen === 'auth'}
+                onAuth={handleAuth}
             />
 
             <ContextChatScreen
@@ -79,3 +89,4 @@ export default function App() {
         </>
     );
 }
+
