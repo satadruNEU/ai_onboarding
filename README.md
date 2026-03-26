@@ -1,6 +1,6 @@
-# Trainual AI Playbook Builder — Technical & Interaction Documentation
+# AI Playbook Builder — Technical & Interaction Documentation
 
-This document serves as the comprehensive technical specification, interaction guide, and design rationale for the Trainual AI Onboarding Prototype. It is intended for designers and developers to understand the structural logic, interaction models, and architectural decisions behind the prototype to facilitate handoff and productionizing.
+This document serves as the comprehensive technical specification, interaction guide, and design rationale for the AI Onboarding Prototype. It is intended for designers and developers to understand the structural logic, interaction models, and architectural decisions behind the prototype to facilitate handoff and productionizing.
 
 ---
 
