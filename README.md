@@ -3,6 +3,7 @@
 This document serves as the comprehensive technical specification, interaction guide, and design rationale for the AI Onboarding Prototype. It is intended for designers and developers to understand the structural logic, interaction models, and architectural decisions behind the prototype to facilitate handoff and productionizing.
 
 ---
+<img width="1470" height="835" alt="Screenshot 2026-03-26 at 12 13 15 PM" src="https://github.com/user-attachments/assets/1381eef2-3078-4f0c-a50f-6d6f48379241" />
 
 ## 1. Project Overview
 
