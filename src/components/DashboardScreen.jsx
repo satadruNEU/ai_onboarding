@@ -351,7 +351,7 @@ export default function DashboardScreen({ active, scenario, onBack, onStart, onF
             <nav className="context-nav">
                 <div className="context-nav-left">
                     <div className="context-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
-                        Trainual<sup className="context-nav-sup">®</sup>
+                        Onboardly<sup className="context-nav-sup">®</sup>
                     </div>
                     <span className="context-nav-slash">/</span>
                     <button className="context-nav-item">

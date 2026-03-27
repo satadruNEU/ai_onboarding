@@ -7,7 +7,7 @@ import logo5 from '../assets/logos/logo5.png';
 
 const TRUST_QUOTES = [
     {
-        text: "Trainual cut our onboarding time by 50%. It's the single best investment we've made for our growing team.",
+        text: "Onboardly cut our onboarding time by 50%. It's the single best investment we've made for our growing team.",
         author: "Sarah K.",
         role: "Operations Lead",
         company: "BrightPath Co."
@@ -25,7 +25,7 @@ const TRUST_QUOTES = [
         company: "Nomad Studio"
     },
     {
-        text: "I used to spend my entire first week answering the same questions. Now Trainual does it for me.",
+        text: "I used to spend my entire first week answering the same questions. Now Onboardly does it for me.",
         author: "James L.",
         role: "Engineering Manager",
         company: "StackForge"
@@ -70,7 +70,7 @@ export default function AuthScreen({ active, onAuth }) {
             <nav className="auth-nav">
                 <div className="auth-nav-inner">
                     <div className="auth-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
-                        Trainual<sup className="auth-nav-sup">®</sup>
+                        Onboardly<sup className="auth-nav-sup">®</sup>
                     </div>
                     <button className="auth-nav-login" onClick={onAuth}>
                         Log in
@@ -217,7 +217,7 @@ export default function AuthScreen({ active, onAuth }) {
                         </p>
 
                         <p className="auth-terms">
-                            By continuing, you agree to Trainual's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                            By continuing, you agree to Onboardly's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
                         </p>
                     </div>
                 </div>

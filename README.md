@@ -1,13 +1,13 @@
-# AI Playbook Builder — Technical & Interaction Documentation
+# Onboardly AI Playbook Builder — Technical & Interaction Documentation
 
-This document serves as the comprehensive technical specification, interaction guide, and design rationale for the AI Onboarding Prototype. It is intended for designers and developers to understand the structural logic, interaction models, and architectural decisions behind the prototype to facilitate handoff and productionizing.
+This document serves as the comprehensive technical specification, interaction guide, and design rationale for the Onboardly AI Onboarding Prototype. It is intended for designers and developers to understand the structural logic, interaction models, and architectural decisions behind the prototype to facilitate handoff and productionizing.
 
 ---
 <img width="1470" height="835" alt="Screenshot 2026-03-26 at 12 13 15 PM" src="https://github.com/user-attachments/assets/1381eef2-3078-4f0c-a50f-6d6f48379241" />
 
 ## 1. Project Overview
 
-**What this is:** A high-fidelity React prototype demonstrating an AI-driven onboarding flow for Trainual. It allows users to generate comprehensive company training playbooks from a single prompt, converse with an AI to refine the content, and manage the deployment of this content from a dashboard.
+**What this is:** A high-fidelity React prototype demonstrating an AI-driven onboarding flow for Onboardly. It allows users to generate comprehensive company training playbooks from a single prompt, converse with an AI to refine the content, and manage the deployment of this content from a dashboard.
 
 **The Problem it Solves:** The "blank page syndrome" associated with creating standard operating procedures (SOPs) and training manuals. Managers often lack the time or structure to document their company’s processes from scratch.
 

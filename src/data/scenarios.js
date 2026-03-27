@@ -8,7 +8,7 @@ export const SCENARIOS = {
       { role: 'user', text: "Each location has its own manager, but we share the same standards across all three." },
       { role: 'ai', text: "Perfect. And when a new hire starts, do they train at one specific location or rotate through all three?" },
       { role: 'user', text: "They train at their home location, but using the same materials." },
-      { role: 'ai', text: "That's exactly what Trainual is built for. I have everything I need — building your playbook now." }
+      { role: 'ai', text: "That's exactly what Onboardly is built for. I have everything I need — building your playbook now." }
     ],
     groups: [
       { icon: '🍽️', name: 'Front of House', color: '#e8e8e8', subjects: ['Guest Service Standards','Opening & Closing Procedures','POS System Training','Reservation Management','Upselling Techniques'], count: '5 subjects' },
@@ -40,7 +40,7 @@ export const SCENARIOS = {
     bizName: "Startup Operations Playbook",
     bizDesc: "60 team members · Engineering, Sales & CS training",
     conversation: [
-      { role: 'ai', text: "A fast-growing SaaS team — this is exactly what Trainual was built for. Are you starting from scratch, or do you have some existing documentation to build from?" },
+      { role: 'ai', text: "A fast-growing SaaS team — this is exactly what Onboardly was built for. Are you starting from scratch, or do you have some existing documentation to build from?" },
       { role: 'user', text: "We have a few Notion docs and some Loom videos floating around, but nothing organised." },
       { role: 'ai', text: "That's common. And which team is causing the most onboarding pain right now — engineering, sales, or CS?" },
       { role: 'user', text: "Honestly, CS. We're hiring fast and every new person needs 3 weeks of hand-holding." },

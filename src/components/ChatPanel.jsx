@@ -81,7 +81,7 @@ export default function ChatPanel({ scenario, onChatDone }) {
             <div className="split-left-header">
                 <div className="split-left-title">
                     <div className="split-ai-dot" style={aiDotColor ? { background: aiDotColor } : undefined}></div>
-                    Trainual AI
+                    Onboardly AI
                 </div>
                 <div className="split-left-sub">{subLabel}</div>
             </div>
@@ -90,7 +90,7 @@ export default function ChatPanel({ scenario, onChatDone }) {
                     <div className={`msg ${m.role}`} key={i} style={{ opacity: 1, transform: 'translateY(0)' }}>
                         <div className={`msg-avatar ${m.role}`}>{m.role === 'ai' ? 'AI' : 'Y'}</div>
                         <div className="msg-body">
-                            <div className="msg-name">{m.role === 'ai' ? 'Trainual' : 'You'}</div>
+                            <div className="msg-name">{m.role === 'ai' ? 'Onboardly' : 'You'}</div>
                             <div className="msg-text">{m.text}</div>
                         </div>
                     </div>
@@ -99,7 +99,7 @@ export default function ChatPanel({ scenario, onChatDone }) {
                     <div className="msg ai" style={{ opacity: 1, transform: 'translateY(0)' }}>
                         <div className="msg-avatar ai">AI</div>
                         <div className="msg-body">
-                            <div className="msg-name">Trainual</div>
+                            <div className="msg-name">Onboardly</div>
                             <div className="msg-text">
                                 <div className="typing-indicator">
                                     <div className="typing-dot"></div>

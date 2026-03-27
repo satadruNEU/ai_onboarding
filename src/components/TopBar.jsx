@@ -7,7 +7,7 @@ export default function TopBar({ currentScreen, onSwitchTab }) {
         <div className="topbar">
             <div className="logo">
                 <div className="logo-mark">
-                    <img src={LOGO_SRC} alt="Trainual" />
+                    <img src={LOGO_SRC} alt="Onboardly" />
                 </div>
             </div>
             <div className="topbar-right">

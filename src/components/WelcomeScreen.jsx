@@ -107,7 +107,7 @@ export default function WelcomeScreen({ active, onStart, scenario, onFillExample
             <nav className="welcome-nav">
                 <div className="welcome-nav-inner">
                     <div className="welcome-nav-logo" style={{ fontFamily: "'Instrument Serif', serif" }}>
-                        Trainual<sup className="welcome-nav-sup">®</sup>
+                        Onboardly<sup className="welcome-nav-sup">®</sup>
                     </div>
                     <div className="welcome-nav-links">
                         <a className="welcome-nav-link active" href="#">Home</a>
